@@ -1,0 +1,5 @@
+id,url,thumbnail,title,description,category,duration
+1,https://www.youtube.com/watch?v=dQw4w9WgXcQ,https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg,Sample YouTube Video,Amazing music video with great visuals,music,3:33
+2,Videos/Local/nature.mp4,Thumbnails/nature.jpg,Beautiful Nature,Stunning 4K nature documentary footage,documentary,5:24
+3,https://www.youtube.com/watch?v=9bZkp7q19f0,https://img.youtube.com/vi/9bZkp7q19f0/maxresdefault.jpg,Gangnam Style,Popular K-pop music video,music,4:13
+4,Videos/Local/tutorial.mp4,Thumbnails/tutorial.jpg,Coding Tutorial,Learn React in 10 minutes,education,10:45
