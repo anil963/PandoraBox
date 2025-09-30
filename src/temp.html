@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Gallery</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background-color: #f5f5f5;
+            color: #1a1a1a;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background-color: white;
+            padding: 40px 24px;
+            border-right: 1px solid #e5e5e5;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .sidebar h2 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .category-list {
+            list-style: none;
+        }
+
+        .category-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            margin-bottom: 4px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #1a1a1a;
+            font-size: 15px;
+        }
+
+        .category-item:hover {
+            background-color: #f5f5f5;
+        }
+
+        .category-item.active {
+            background-color: #f0f0f0;
+            font-weight: 500;
+        }
+
+        .category-arrow {
+            color: #999;
+            font-size: 18px;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 40px;
+        }
+
+        .header {
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #1a1a1a;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 32px;
+            align-items: center;
+        }
+
+        .search-container {
+            flex: 1;
+            position: relative;
+            max-width: 500px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 16px 12px 44px;
+            border: 1px solid #e5e5e5;
+            border-radius: 8px;
+            font-size: 15px;
+            outline: none;
+            transition: all 0.2s ease;
+            background-color: white;
+        }
+
+        .search-input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+        }
+
+        .filter-pills {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .filter-pill {
+            padding: 8px 20px;
+            border-radius: 20px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            background-color: #e5e5e5;
+            color: #666;
+        }
+
+        .filter-pill:hover {
+            background-color: #d4d4d4;
+        }
+
+        .filter-pill.active {
+            background-color: #3b82f6;
+            color: white;
+        }
+
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        .photo-card {
+            background-color: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .photo-card:hover {
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            transform: translateY(-4px);
+        }
+
+        .photo-image-container {
+            width: 100%;
+            height: 220px;
+            overflow: hidden;
+            background-color: #f5f5f5;
+            position: relative;
+        }
+
+        .photo-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .photo-card:hover .photo-image {
+            transform: scale(1.05);
+        }
+
+        .photo-info {
+            padding: 16px;
+        }
+
+        .photo-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #1a1a1a;
+        }
+
+        .photo-description {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+            animation: fadeIn 0.2s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: 16px;
+            max-width: 900px;
+            width: 100%;
+            max-height: 90vh;
+            overflow: hidden;
+            position: relative;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: white;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #666;
+            z-index: 10;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background-color: #f5f5f5;
+            color: #1a1a1a;
+        }
+
+        .modal-image {
+            width: 100%;
+            max-height: 500px;
+            object-fit: cover;
+        }
+
+        .modal-info {
+            padding: 24px;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #1a1a1a;
+        }
+
+        .modal-category {
+            display: inline-block;
+            padding: 6px 12px;
+            background-color: #e5e5e5;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            text-transform: capitalize;
+            margin-bottom: 16px;
+        }
+
+        .modal-description {
+            font-size: 16px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .modal-btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-btn-primary {
+            background-color: #3b82f6;
+            color: white;
+        }
+
+        .modal-btn-primary:hover {
+            background-color: #2563eb;
+        }
+
+        .modal-btn-secondary {
+            background-color: #f5f5f5;
+            color: #1a1a1a;
+        }
+
+        .modal-btn-secondary:hover {
+            background-color: #e5e5e5;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        .empty-state h3 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1a1a1a;
+        }
+
+        .empty-state p {
+            font-size: 15px;
+            color: #666;
+        }
+
+        .loading-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 28px;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-container {
+                max-width: 100%;
+            }
+
+            .photo-grid {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const PhotoGallery = () => {
+            const [photos, setPhotos] = useState([]);
+            const [selectedPhoto, setSelectedPhoto] = useState(null);
+            const [searchTerm, setSearchTerm] = useState('');
+            const [activeCategory, setActiveCategory] = useState('All');
+            const [loading, setLoading] = useState(true);
+            const [categories, setCategories] = useState(['All']);
+
+            useEffect(() => {
+                loadPhotosFromAssets();
+            }, []);
+
+            const loadPhotosFromAssets = async () => {
+                try {
+                    // Define the folder structure
+                    const folderStructure = {
+                        'Nature': ['nature1.jpg', 'nature2.jpg', 'nature3.jpg'],
+                        'City': ['city1.jpg', 'city2.jpg', 'city3.jpg'],
+                        'Food': ['food1.jpg', 'food2.jpg', 'food3.jpg'],
+                        'Travel': ['travel1.jpg', 'travel2.jpg', 'travel3.jpg']
+                    };
+
+                    const loadedPhotos = [];
+                    let photoId = 1;
+
+                    // Extract categories
+                    const allCategories = ['All', ...Object.keys(folderStructure)];
+                    setCategories(allCategories);
+
+                    // Load photos from each category folder
+                    for (const [category, files] of Object.entries(folderStructure)) {
+                        for (const filename of files) {
+                            const photoPath = `Assets/${category}/${filename}`;
+                            
+                            // Extract photo name without extension
+                            const photoName = filename.replace(/\.[^/.]+$/, '');
+                            const formattedName = photoName
+                                .replace(/([a-z])([0-9])/gi, '$1 $2')
+                                .replace(/([A-Z])/g, ' $1')
+                                .trim()
+                                .split(' ')
+                                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                                .join(' ');
+
+                            loadedPhotos.push({
+                                id: photoId++,
+                                title: formattedName,
+                                description: `Beautiful ${category.toLowerCase()} photo`,
+                                category: category,
+                                url: photoPath,
+                                filename: filename
+                            });
+                        }
+                    }
+
+                    setPhotos(loadedPhotos);
+                    setLoading(false);
+                } catch (error) {
+                    console.error('Error loading photos:', error);
+                    setLoading(false);
+                }
+            };
+
+            const filteredPhotos = photos.filter(photo => {
+                const matchesSearch = photo.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                                     photo.description.toLowerCase().includes(searchTerm.toLowerCase());
+                const matchesCategory = activeCategory === 'All' || photo.category === activeCategory;
+                return matchesSearch && matchesCategory;
+            });
+
+            const openModal = (photo) => {
+                setSelectedPhoto(photo);
+                document.body.style.overflow = 'hidden';
+            };
+
+            const closeModal = () => {
+                setSelectedPhoto(null);
+                document.body.style.overflow = 'auto';
+            };
+
+            const downloadPhoto = (photo) => {
+                const link = document.createElement('a');
+                link.href = photo.url;
+                link.download = photo.filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            };
+
+            return (
+                <div className="container">
+                    {/* Sidebar */}
+                    <aside className="sidebar">
+                        <h2>Categories</h2>
+                        <ul className="category-list">
+                            {categories.map(category => (
+                                <li 
+                                    key={category}
+                                    className={`category-item ${activeCategory === category ? 'active' : ''}`}
+                                    onClick={() => setActiveCategory(category)}
+                                >
+                                    <span>{category}</span>
+                                    <span className="category-arrow">›</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </aside>
+
+                    {/* Main Content */}
+                    <main className="main-content">
+                        {/* Header */}
+                        <div className="header">
+                            <h1>Photo Gallery</h1>
+                            <p>Discover beautiful moments captured in time</p>
+                        </div>
+
+                        {/* Controls */}
+                        <div className="controls">
+                            <div className="search-container">
+                                <svg className="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <path d="m21 21-4.35-4.35"></path>
+                                </svg>
+                                <input
+                                    type="text"
+                                    className="search-input"
+                                    placeholder="Search photos..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                            </div>
+                            <div className="filter-pills">
+                                {categories.map(category => (
+                                    <button
+                                        key={category}
+                                        className={`filter-pill ${activeCategory === category ? 'active' : ''}`}
+                                        onClick={() => setActiveCategory(category)}
+                                    >
+                                        {category}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Photo Grid */}
+                        {loading ? (
+                            <div className="loading-state">
+                                <p>Loading photos...</p>
+                            </div>
+                        ) : filteredPhotos.length === 0 ? (
+                            <div className="empty-state">
+                                <div className="empty-state-icon">📷</div>
+                                <h3>No photos found</h3>
+                                <p>Try adjusting your search or filter criteria</p>
+                            </div>
+                        ) : (
+                            <div className="photo-grid">
+                                {filteredPhotos.map(photo => (
+                                    <div 
+                                        key={photo.id}
+                                        className="photo-card"
+                                        onClick={() => openModal(photo)}
+                                    >
+                                        <div className="photo-image-container">
+                                            <img 
+                                                src={photo.url}
+                                                alt={photo.title}
+                                                className="photo-image"
+                                            />
+                                        </div>
+                                        <div className="photo-info">
+                                            <div className="photo-title">{photo.title}</div>
+                                            <div className="photo-description">{photo.description}</div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </main>
+
+                    {/* Modal */}
+                    {selectedPhoto && (
+                        <div className="modal-overlay" onClick={closeModal}>
+                            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                                <button className="modal-close" onClick={closeModal}>×</button>
+                                <img 
+                                    src={selectedPhoto.url}
+                                    alt={selectedPhoto.title}
+                                    className="modal-image"
+                                />
+                                <div className="modal-info">
+                                    <h2 className="modal-title">{selectedPhoto.title}</h2>
+                                    <span className="modal-category">{selectedPhoto.category}</span>
+                                    <p className="modal-description">{selectedPhoto.description}</p>
+                                    <div className="modal-actions">
+                                        <button 
+                                            className="modal-btn modal-btn-primary"
+                                            onClick={() => downloadPhoto(selectedPhoto)}
+                                        >
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                <polyline points="7 10 12 15 17 10"></polyline>
+                                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                                            </svg>
+                                            Download
+                                        </button>
+                                        <button className="modal-btn modal-btn-secondary">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                <circle cx="18" cy="5" r="3"></circle>
+                                                <circle cx="6" cy="12" r="3"></circle>
+                                                <circle cx="18" cy="19" r="3"></circle>
+                                                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                                                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                                            </svg>
+                                            Share
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<PhotoGallery />);
+    </script>
+</body>
+</html>
