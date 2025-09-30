@@ -7,66 +7,113 @@ const PhotoGallery = () => {
     const [activeCategory, setActiveCategory] = useState('All');
     const [loading, setLoading] = useState(true);
     const [categories, setCategories] = useState(['All']);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
-        loadPhotosFromAssets();
+        loadPhotosFromCSV();
     }, []);
 
-    const loadPhotosFromAssets = async () => {
+    const loadPhotosFromCSV = async () => {
         try {
-            // Define the folder structure
-            const folderStructure = {
-                'Nature': ['nature1.jpg', 'nature2.jpg', 'nature3.jpg'],
-                'City': ['city1.jpg', 'city2.jpg', 'city3.jpg'],
-                'Food': ['food1.jpg', 'food2.jpg', 'food3.jpg'],
-                'Travel': ['travel1.jpg', 'travel2.jpg', 'travel3.jpg']
-            };
+            setLoading(true);
+            setError(null);
 
+            // Fetch the CSV file from local folder
+            const response = await fetch('photos.csv');
+            
+            if (!response.ok) {
+                throw new Error('Failed to load photos.csv. Make sure the file exists in the same folder.');
+            }
+
+            const csvText = await response.text();
+            
+            // Parse CSV manually (simple parser)
+            const lines = csvText.split('\n');
+            const headers = lines[0].split(',').map(h => h.trim());
+            
             const loadedPhotos = [];
-            let photoId = 1;
+            const categorySet = new Set();
 
-            // Extract categories
-            const allCategories = ['All', ...Object.keys(folderStructure)];
-            setCategories(allCategories);
+            // Process each line (skip header)
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue; // Skip empty lines
 
-            // Load photos from each category folder
-            for (const [category, files] of Object.entries(folderStructure)) {
-                for (const filename of files) {
-                    const photoPath = `Assets/${category}/${filename}`;
+                // Split by comma but handle commas in quotes
+                const values = parseCSVLine(line);
+                
+                if (values.length >= 5) {
+                    const photo = {
+                        id: parseInt(values[0]) || i,
+                        url: values[1].trim(),
+                        title: values[2].trim(),
+                        description: values[3].trim(),
+                        category: values[4].trim(),
+                        filename: values[2].trim().replace(/\s+/g, '_') + '.jpg'
+                    };
+
+                    loadedPhotos.push(photo);
                     
-                    // Extract photo name without extension
-                    const photoName = filename.replace(/\.[^/.]+$/, '');
-                    const formattedName = photoName
-                        .replace(/([a-z])([0-9])/gi, '$1 $2')
-                        .replace(/([A-Z])/g, ' $1')
-                        .trim()
-                        .split(' ')
-                        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                        .join(' ');
-
-                    loadedPhotos.push({
-                        id: photoId++,
-                        title: formattedName,
-                        description: `Beautiful ${category.toLowerCase()} photo`,
-                        category: category,
-                        url: photoPath,
-                        filename: filename
-                    });
+                    // Capitalize first letter of category
+                    const formattedCategory = photo.category.charAt(0).toUpperCase() + 
+                                            photo.category.slice(1).toLowerCase();
+                    categorySet.add(formattedCategory);
                 }
             }
 
+            // Set photos and categories
             setPhotos(loadedPhotos);
+            
+            // Create categories array with 'All' first, then sorted categories
+            const sortedCategories = ['All', ...Array.from(categorySet).sort()];
+            setCategories(sortedCategories);
+            
             setLoading(false);
         } catch (error) {
-            console.error('Error loading photos:', error);
+            console.error('Error loading photos from CSV:', error);
+            setError(error.message);
             setLoading(false);
         }
     };
 
+    // Helper function to parse CSV line (handles commas in quotes)
+    const parseCSVLine = (line) => {
+        const result = [];
+        let current = '';
+        let inQuotes = false;
+
+        for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            
+            if (char === '"') {
+                inQuotes = !inQuotes;
+            } else if (char === ',' && !inQuotes) {
+                result.push(current);
+                current = '';
+            } else {
+                current += char;
+            }
+        }
+        
+        result.push(current);
+        return result.map(val => val.replace(/^"|"$/g, '').trim());
+    };
+
     const filteredPhotos = photos.filter(photo => {
+        // Search matches against title and description from CSV
         const matchesSearch = photo.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                              photo.description.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesCategory = activeCategory === 'All' || photo.category === activeCategory;
+        
+        // Normalize category comparison - compare normalized values
+        const normalizedPhotoCategory = photo.category.charAt(0).toUpperCase() + 
+                                       photo.category.slice(1).toLowerCase();
+        const normalizedActiveCategory = activeCategory === 'All' ? 'All' : 
+                                        activeCategory.charAt(0).toUpperCase() + 
+                                        activeCategory.slice(1).toLowerCase();
+        
+        const matchesCategory = normalizedActiveCategory === 'All' || 
+                               normalizedPhotoCategory === normalizedActiveCategory;
+        
         return matchesSearch && matchesCategory;
     });
 
@@ -84,9 +131,25 @@ const PhotoGallery = () => {
         const link = document.createElement('a');
         link.href = photo.url;
         link.download = photo.filename;
+        link.target = '_blank';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+    };
+
+    const sharePhoto = (photo) => {
+        if (navigator.share) {
+            navigator.share({
+                title: photo.title,
+                text: photo.description,
+                url: photo.url
+            }).catch(err => console.log('Error sharing:', err));
+        } else {
+            // Fallback: copy link to clipboard
+            navigator.clipboard.writeText(photo.url)
+                .then(() => alert('Link copied to clipboard!'))
+                .catch(err => console.log('Error copying:', err));
+        }
     };
 
     return (
@@ -144,18 +207,30 @@ const PhotoGallery = () => {
                     </div>
                 </div>
 
-                {/* Photo Grid */}
-                {loading ? (
-                    <div className="loading-state">
-                        <p>Loading photos...</p>
+                {/* Error State */}
+                {error && (
+                    <div className="empty-state">
+                        <div className="empty-state-icon">⚠️</div>
+                        <h3>Error Loading Photos</h3>
+                        <p>{error}</p>
+                        <p style={{marginTop: '10px', fontSize: '14px'}}>
+                            Make sure <strong>photos.csv</strong> exists in the same folder as index.html
+                        </p>
                     </div>
-                ) : filteredPhotos.length === 0 ? (
+                )}
+
+                {/* Photo Grid */}
+                {!error && loading ? (
+                    <div className="loading-state">
+                        <p>Loading photos from CSV...</p>
+                    </div>
+                ) : !error && filteredPhotos.length === 0 ? (
                     <div className="empty-state">
                         <div className="empty-state-icon">📷</div>
                         <h3>No photos found</h3>
                         <p>Try adjusting your search or filter criteria</p>
                     </div>
-                ) : (
+                ) : !error && (
                     <div className="photo-grid">
                         {filteredPhotos.map(photo => (
                             <div 
@@ -168,6 +243,9 @@ const PhotoGallery = () => {
                                         src={photo.url}
                                         alt={photo.title}
                                         className="photo-image"
+                                        onError={(e) => {
+                                            e.target.src = 'https://via.placeholder.com/800x600?text=Image+Not+Found';
+                                        }}
                                     />
                                 </div>
                                 <div className="photo-info">
@@ -189,10 +267,16 @@ const PhotoGallery = () => {
                             src={selectedPhoto.url}
                             alt={selectedPhoto.title}
                             className="modal-image"
+                            onError={(e) => {
+                                e.target.src = 'https://via.placeholder.com/900x500?text=Image+Not+Found';
+                            }}
                         />
                         <div className="modal-info">
                             <h2 className="modal-title">{selectedPhoto.title}</h2>
-                            <span className="modal-category">{selectedPhoto.category}</span>
+                            <span className="modal-category">
+                                {selectedPhoto.category.charAt(0).toUpperCase() + 
+                                 selectedPhoto.category.slice(1).toLowerCase()}
+                            </span>
                             <p className="modal-description">{selectedPhoto.description}</p>
                             <div className="modal-actions">
                                 <button 
@@ -206,7 +290,10 @@ const PhotoGallery = () => {
                                     </svg>
                                     Download
                                 </button>
-                                <button className="modal-btn modal-btn-secondary">
+                                <button 
+                                    className="modal-btn modal-btn-secondary"
+                                    onClick={() => sharePhoto(selectedPhoto)}
+                                >
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                         <circle cx="18" cy="5" r="3"></circle>
                                         <circle cx="6" cy="12" r="3"></circle>
