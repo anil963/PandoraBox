@@ -1,0 +1,13 @@
+id,symbol,name,price,change,changePercent,volume,marketCap,sector,description,historicalData,exchange
+1,AAPL,Apple Inc.,182.52,2.45,1.36,52.4M,2.85T,technology,Leading technology company known for iPhone and Mac products,175.20;176.80;178.50;180.20;179.00;181.30;182.52,NASDAQ
+2,MSFT,Microsoft Corporation,378.91,-1.23,-0.32,28.3M,2.81T,technology,Global leader in software and cloud computing services,380.50;382.10;381.20;379.80;380.50;377.90;378.91,NASDAQ
+3,GOOGL,Alphabet Inc.,139.57,3.21,2.35,32.1M,1.75T,technology,Parent company of Google and various tech ventures,133.40;135.20;136.80;137.50;138.20;137.10;139.57,NASDAQ
+4,AMZN,Amazon.com Inc.,151.94,1.87,1.24,45.8M,1.57T,technology,E-commerce and cloud computing giant,148.50;149.20;150.10;151.00;150.50;151.20;151.94,NASDAQ
+5,TSLA,Tesla Inc.,248.50,-5.32,-2.10,98.5M,788.5B,automotive,Electric vehicle and clean energy company,255.20;258.40;254.80;252.10;250.60;248.90;248.50,NASDAQ
+6,JPM,JPMorgan Chase,158.73,0.95,0.60,12.5M,461.2B,financial,Leading global financial services firm,156.80;157.20;158.10;157.90;158.50;158.20;158.73,NYSE
+7,V,Visa Inc.,263.45,2.12,0.81,8.2M,537.8B,financial,Global payments technology company,258.90;260.40;261.80;262.50;263.10;262.90;263.45,NYSE
+8,JNJ,Johnson & Johnson,160.23,-0.45,-0.28,7.1M,387.4B,healthcare,Diversified healthcare and pharmaceutical company,161.20;160.80;161.50;160.90;160.50;160.70;160.23,NYSE
+9,PFE,Pfizer Inc.,28.94,0.34,1.19,38.4M,162.7B,healthcare,Pharmaceutical and biotechnology corporation,28.20;28.40;28.60;28.50;28.70;28.75;28.94,NYSE
+10,XOM,Exxon Mobil,105.67,1.23,1.18,18.9M,435.2B,energy,Multinational oil and gas corporation,103.50;104.20;104.80;105.10;105.30;105.50;105.67,NYSE
+11,WMT,Walmart Inc.,165.34,0.87,0.53,9.8M,448.3B,retail,Largest retail corporation in the world,163.80;164.20;164.90;165.10;165.50;165.20;165.34,NYSE
+12,DIS,Walt Disney Co.,95.25,-1.12,-1.16,11.2M,174.1B,entertainment,Global entertainment and media conglomerate,96.80;97.20;96.50;96.10;95.80;95.50;95.25,NYSE
